@@ -37,12 +37,14 @@ async def pair(ctx):
     channel = bot.get_channel(channel_id)
     message = await channel.fetch_message(message_id)
     users = set()
-
+    print("TEST1")
     for reaction in message.reactions:
         async for user in reaction.users():
             users.add(user)
     userslist = list(users)
     random.shuffle(userslist)
+
+    print(users)
     breakline = "\n"
     emoji = '\U0001F538'
     for user in userslist:
@@ -50,6 +52,7 @@ async def pair(ctx):
                               description=f"Pairings for this week are:\n"
                                           + f" {' '.join(user.mention + breakline if i % 2 != 0 else user.mention + emoji for i, user in enumerate(userslist)  ) } ",
                               color=0xFF5733)
+        print("TEST")
 
     await ctx.send(embed=embed)
 
