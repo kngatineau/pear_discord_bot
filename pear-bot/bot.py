@@ -107,7 +107,7 @@ async def create(ctx):
 
     #  writes the ID of the message created to a .txt file for later use
     message = await channel.fetch_message(channel.last_message_id)
-    with open('root_message.csv', 'w', encoding="utf-8", newline='') as f:
+    with open('Pear/pear-bot/root_message.csv', 'w', encoding="utf-8", newline='') as f:
         writer = csv.writer(f)
         writer.writerow([str(message.id)] + answers)
 
@@ -121,7 +121,7 @@ channel_id = 1007139879022506094
 @commands.has_permissions(administrator=True)
 async def pair(ctx):
     import_data = []
-    with open('root_message.csv', encoding='utf-8') as file_name:
+    with open('pear-bot/root_message.csv', encoding='utf-8') as file_name:
         import_data = np.loadtxt(file_name, delimiter=",", dtype="str")
 
     message_id = int(import_data[0])
