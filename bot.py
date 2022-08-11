@@ -2,6 +2,8 @@
 
 import os
 import random
+import csv
+import numpy as np
 
 import discord
 
@@ -30,91 +32,145 @@ async def on_ready():
 #  Command triggered via '!create'
 @bot.command()
 @commands.has_permissions(administrator=True)
-async def create(ctx, title, description, emoji):
+async def create(ctx):
+    prompts = (
+        "What is the **TITLE** of the **HOST** message?",
+        "What is the **DESCRIPTION** of the **HOST** message?",
+        "Enter the **REACTION** to collect users:",
+        "Enter the **TITLE** of the **PAIR** message:",
+        "Enter the **DESCRIPTION** of the **PAIR** message:"
+    )
+    answers = []
+    colours = (
+        0xff0000,
+        0xffa700,
+        0xfff400,
+        0xa3ff00,
+        0x2cba00
+    )
+    msg_list = []
+
+    def check(m):
+        return m.author == ctx.author and m.channel == ctx.channel
+
+    def config_fields(i_count, embed_):
+        match i_count:
+            case 0:
+                return ""
+            case 1:
+                embed_.add_field(name="Host Message", value="Title: ✅️", inline=False)
+            case 2:
+                embed_.add_field(name="Host Message", value="Title: ✅️\nDescription: ✅️", inline=False)
+            case 3:
+                embed_.add_field(name="Host Message", value=f"Title: ✅️\nDescription: ✅️\nReaction: {answers[2]} ",
+                                 inline=False)
+            case 4:
+                embed_.add_field(name="Host Message", value=f"Title: ✅️\nDescription: ✅️\nReaction: {answers[2]} ",
+                                 inline=True)
+                embed_.add_field(name="Pair Message", value=f"Title: ✅️", inline=True)
+
+    for i, prompt in enumerate(prompts):
+        print("Value of i: " + str(i))
+        em = discord.Embed(
+            title=f"Configuration - Step {i + 1} of 5",
+            description=prompt,
+            color=colours[i])
+        em.set_author(name="Pear", url="https://github.com/kgatineau/pear_discord_bot",
+                      icon_url=bot.user.avatar_url)
+        config_fields(i, em)
+        em.set_footer(text="Type the answer as a message and hit enter.")
+
+        prompt_embed = await ctx.send(embed=em)
+        msg_list.append(prompt_embed)
+        msg = await bot.wait_for("message", check=check, timeout=None)
+        msg_list.append(msg)
+        answers.append(msg.content)
+
+        print(answers)
+
     #  generates the embed to be sent as a response
-    embed = discord.Embed(title=title,
-                          description=description,
+    embed = discord.Embed(title=answers[0],
+                          description=answers[1],
                           color=0xFF5733)
+    embed.set_author(name="Pear", url="https://github.com/kgatineau/pear_discord_bot",
+                  icon_url=bot.user.avatar_url)
 
     #  initializes the channel to send the message in
     channel = bot.get_channel(channel_id)
 
     #  sends the embed to the channel the command was triggered in
     msg = await ctx.send(embed=embed)
-    await msg.add_reaction(emoji)
+    await msg.add_reaction(answers[2])
 
-    print(str(emoji))
+    for msg_ in msg_list:
+        await msg_.delete()
 
     #  writes the ID of the message created to a .txt file for later use
     message = await channel.fetch_message(channel.last_message_id)
-    with open('root_message.txt', 'w', encoding="utf-8") as f:
-        f.write(str(message.id))
-        f.write("\n" + str(emoji))
+    with open('root_message.csv', 'w', encoding="utf-8", newline='') as f:
+        writer = csv.writer(f)
+        writer.writerow([str(message.id)] + answers)
 
 
 #  currently hard coded to an ID in a test server, will move these to the .env or .txt file next iteration
-channel_id = 976502346878177293
+channel_id = 1007139879022506094
 
 
 #  Command triggered via '!pair"
 @bot.command()
 @commands.has_permissions(administrator=True)
 async def pair(ctx):
-    #  opens the .txt file and reads the message ID of the reaction host post
-    with open('root_message.txt') as r:
-        message_id = int(r.readline())
-        reaction_emoji = str(r.readline())
-    print("Reaction emoji:" + reaction_emoji)
-    #  sets the respective variables
-    channel = bot.get_channel(channel_id)
-    message = await channel.fetch_message(message_id)
+    import_data = []
+    with open('root_message.csv', encoding='utf-8') as file_name:
+        import_data = np.loadtxt(file_name, delimiter=",", dtype="str")
 
-    #  sets an empty array to be filled with users
+    message_id = int(import_data[0])
+
+    print("IMPORT DATA: " + str(import_data))
+    print("MESSAGE ID " + str(message_id))
+
+    channel = bot.get_channel(channel_id)
+    message = await channel.fetch_message(str(message_id))
+
     users = set()
 
-    #  await message.add_reaction(emoji)
-
-    #  loops over the reactions on the specified post
     for reaction in message.reactions:
 
-        #  loops over the users for each reaction
         async for user in reaction.users():
             guild = bot.get_guild(976502346878177290)
 
             if guild.get_member(user.id) is None:
-                #  deletes a user if they no longer are a part of the server
                 await reaction.remove(user)
 
             else:
-                #  otherwise, adds them to the list
                 if user.id != 949802757483810917:
                     users.add(user)
 
-    #  copies the value of the list 'users' too 'userslist' so it can be shuffled, then shuffles the list
     userslist = list(users)
     random.shuffle(userslist)
 
-    #  loops over the shuffled list of users
     if len(userslist) > 2:
-        #  variables set as these values cannot be added directly to f string statements
         breakline = "\n"
         emoji = '\U0001F538'
 
         for _ in userslist:
-            #  adds the list values to the 'pair' embed
-            embed = discord.Embed(title="Coffee Chat Pairings",
-                                  description=f"Pairings for this week are:\n"
+            embed = discord.Embed(title=f"{import_data[4]}",
+                                  description=f"{import_data[5]}\n"
                                               + f" {' '.join(user.mention + breakline if i % 2 != 0 else user.mention + emoji for i, user in enumerate(userslist))} ",
                                   color=0xFF5733)
+            embed.set_author(name="Pairing with Pear!", url="https://github.com/kgatineau/pear_discord_bot",
+                             icon_url=bot.user.avatar_url)
+            embed.set_footer(text=f"Pear generated by: {ctx.author.display_name}")
             await ctx.send(embed=embed)
     else:
-        embed = discord.Embed(title="Coffee Chat Pairings",
-                              description="No pairings available.",
+        embed = discord.Embed(title=f"{import_data[4]}",
+                              description="No pairings available. Try again when more users react to the host "
+                                          "message.\n",
                               color=0xFF5733)
+        embed.set_author(name="Pear", url="https://github.com/kgatineau/pear_discord_bot",
+                         icon_url=bot.user.avatar_url)
+        embed.set_footer(text=f"Pear generated by: {ctx.author.display_name}")
         await ctx.send(embed=embed)
-
-    #  sends the embed
-    #  await ctx.send(embed=embed)
 
 
 bot.run(TOKEN)
