@@ -1,9 +1,15 @@
+#  bot_functions.py
+import os
+
 import discord
-from discord.ext import commands
 import pandas as pd
+from dotenv import load_dotenv
 
 import csv
-import numpy as np
+
+#  for use of 'mentioning' channel in embed. not necessary if you are not planning to mention any channels.
+load_dotenv()
+MENTION_CHANNEL_ID = os.getenv('MENTION_CHANNEL_ID')
 
 prompts = (
     "What is the **TITLE** of the **HOST** message?",
@@ -14,19 +20,43 @@ prompts = (
 )
 
 
+def pair_logic(userslist):
+    pair = ""
+    for i, user in enumerate(userslist):
+        if len(userslist) % 2 == 0:  # if user amount is even
+            if i % 2 != 0:
+                if i != len(userslist) - 1:
+                    pair = pair + user.mention
+                else:
+                    pair = pair + user.mention + "\n"
+            else:
+                pair = pair + "\n" + user.mention + '\U0001F538'
+
+        else:  # if user amount is odd
+            if i < len(userslist) - 1:
+                if i % 2 != 0:
+                    pair = pair + user.mention
+                else:
+                    pair = pair + "\n" + user.mention + '\U0001F538'
+            if i == len(userslist) - 1:
+                pair = pair + '\U0001F538' + user.mention + "\n"
+    return pair
+
+
+#  sets the embed for the !pair command, prints paired users if more than two real users clicked the reaction
+#  remove the MENTION_CHANNEL_ID portion in parentheses on line 52 if no channels are being mentioned
 def set_pair_embed(ctx, userslist, msg_list):
     br = "\n"
-    emoji = '\U0001F538'
     if len(userslist) > 2:
         pair_title = f"{msg_list[4]}"
-        pair_desc = f"{' '.join(user.mention + br if i % 2 != 0 else user.mention + emoji for i, user in enumerate(userslist)) + br + msg_list[5]} "
+        pair_desc = f"{''.join(pair_logic(userslist)) + br + msg_list[5] + ('<#' + MENTION_CHANNEL_ID + '>' + '.')} "
 
     else:
         pair_title = msg_list[4] + "\n"
         pair_desc = "No pairings available. Try again when more users react to the host message."
 
     embed = discord.Embed(title=pair_title,
-                          description=pair_desc,
+                          description=f"{pair_desc}",
                           color=0xFF5733)
     embed.set_author(name="Pear", url="https://github.com/kgatineau/pear_discord_bot",
                      icon_url="https://i.ibb.co/2y03dJ5/Pngtree-meb-style-yellow-cute-pear-5867760-1.png")
@@ -34,19 +64,21 @@ def set_pair_embed(ctx, userslist, msg_list):
     return embed
 
 
+#  exports the data to a CSV to be retrieved later by the !pair command
 def export_data(message, answers):
     with open('root_message.csv', 'w', encoding="utf-8", newline='') as f:
         writer = csv.writer(f)
         writer.writerow([str(message.id)] + answers)
 
 
+#  parse the data from CSV to a list
 def import_data():
     list_msg = pd.read_csv(r'root_message.csv')
     msg_list = list(list_msg)
-    print(msg_list)
     return msg_list
 
 
+#  creates the embed for each iteration of the configuration loop
 def create_prompt_embed(i, prompt, answers):
     colours = (
         0xff0000,
@@ -57,7 +89,6 @@ def create_prompt_embed(i, prompt, answers):
     )
 
     if len(answers) < 5:
-        print(len(answers))
         prompt_t = f"Configuration - Step {i + 1} of 5"
         prompt_d = prompt
         colour = colours[i]
@@ -77,6 +108,7 @@ def create_prompt_embed(i, prompt, answers):
     return em
 
 
+#  determines the number of added fields the prompt embed object sent gets pending on the value of the loop counter
 def config_fields(i_count, embed_, answers):
     match i_count:
         case 0:
