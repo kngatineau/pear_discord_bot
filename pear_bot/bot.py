@@ -26,7 +26,6 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 msg_list = []
 userslist = []
 answers = []
-misconduct_channel = bot.get_channel(1007894151263690762)
 
 #  "!create" command logic
 @bot.command()
