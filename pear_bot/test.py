@@ -63,6 +63,7 @@ def test_create_prompt_embed():
         if i == 0:
             assert embed.title == test_answers[0]
 
+def test_pair_logic():
 
 def test_set_pair_embed():
     print(" >> TESTED WITH USER LIST LENGTH OF " + str(len(test_users)))
