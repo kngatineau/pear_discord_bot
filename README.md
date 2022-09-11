@@ -26,6 +26,7 @@ Along with PyCharm IDE, I am utilizing a few plugins to help with development. T
 
 ### API
 -	Discord.py 
+- PyTest
 
 ## Testing Pear
 I opted to structure the bot by pulling out the majority of the function code into a separate python file, bot_functions.py. This made unit testing a bit easier than relying on a mock "context" object to mimick the Discord environment. Unit tests are written to cover the functions in bot_functions.py only.
