@@ -84,7 +84,7 @@ async def pair(ctx):
     userslist = list(users)
     random.shuffle(userslist)
 
-    await ctx.send(msg_list[4] + "\n" + bot_functions.pair_logic(userslist), embed=bot_functions.set_pair_embed(ctx, userslist, msg_list))
+    await ctx.send(msg_list[4] + "\n" + bot_functions.pair_logic(userslist), embed=bot_functions.set_pair_embed(userslist, msg_list))
 
 
 bot.run(TOKEN)
