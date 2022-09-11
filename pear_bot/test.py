@@ -47,6 +47,7 @@ class TestUser:
     mention = ""
 
 
+# generates a user_count amount of users
 def generate_test_users(user_count):
     test_users = [TestUser() for i in range(user_count)]
 
@@ -86,6 +87,7 @@ def test_create_prompt_embed():
 def test_pair_logic_even():
     pair = bot_functions.pair_logic(generate_test_users(8))
     assert pair.count('\U0001F538') == len(generate_test_users(8)) / 2
+
 
 def test_pair_logic_odd():
     pair = bot_functions.pair_logic(generate_test_users(9))
