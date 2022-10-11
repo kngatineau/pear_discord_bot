@@ -1,6 +1,6 @@
 #  test.py
 
-from pear_bot import bot_functions
+from pear_bot import bot_functions, csv_controller
 import pandas as pd
 import math
 
@@ -60,14 +60,14 @@ def generate_test_users(user_count):
 
 def test_export():
     print()
-    bot_functions.export_data(TestMessage, test_answers)
+    csv_controller.export_data(TestMessage, test_answers)
     contents = pd.read_csv(r'root_message.csv')
     assert contents is not None
 
 
 def test_import():
     print()
-    contents = bot_functions.import_data()
+    contents = csv_controller.import_data()
     assert contents is not None
 
 
