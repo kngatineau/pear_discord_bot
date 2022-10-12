@@ -1,6 +1,6 @@
 #  test.py
 
-from pear_bot import bot_functions, csv_controller
+from pear_bot import csv_controller, pair_embed, config_embed
 import pandas as pd
 import math
 
@@ -75,7 +75,7 @@ def test_create_prompt_embed():
     test_answers_loop = []
     for i, prompt in enumerate(test_prompts):
         test_answers_loop.append(test_answers[i])
-        embed = bot_functions.create_prompt_embed(i, prompt, test_answers_loop)
+        embed = config_embed.create_prompt_embed(i, prompt, test_answers_loop)
         if len(test_answers_loop) < 5:
             assert embed.title == f"Configuration - Step {i + 1} of 5"
             assert embed.description == prompt
@@ -85,32 +85,32 @@ def test_create_prompt_embed():
 
 
 def test_pair_logic_even():
-    pair = bot_functions.pair_logic(generate_test_users(8))
+    pair = pair_embed.pair_logic(generate_test_users(8))
     assert pair.count('\U0001F538') == len(generate_test_users(8)) / 2
 
 
 def test_pair_logic_odd():
-    pair = bot_functions.pair_logic(generate_test_users(9))
+    pair = pair_embed.pair_logic(generate_test_users(9))
     assert pair.count('\U0001F538') == math.ceil(len(generate_test_users(9)) / 2)
 
 
 def test_set_pair_embed_gt_two():
     print(" >> TESTED WITH USER LIST LENGTH OF " + str(len(generate_test_users(8))))
-    embed = bot_functions.set_pair_embed(generate_test_users(8), test_msg_list)
+    embed = pair_embed.set_pair_embed(generate_test_users(8), test_msg_list)
     if len(generate_test_users(8)) > 2:
         assert embed.title == test_msg_list[4]
         assert embed.description is not None
 
 
 def test_set_pair_embed_lt_two():
-    embed = bot_functions.set_pair_embed(generate_test_users(1), test_msg_list)
+    embed = pair_embed.set_pair_embed(generate_test_users(1), test_msg_list)
     if len(generate_test_users(1)) < 2:
         assert embed.description == "No pairings available. Try again when more users react to the host message."
 
 
 def test_config_fields():
     for i, prompt in enumerate(test_prompts):
-        embed = bot_functions.create_prompt_embed(i, test_prompts, test_answers)
+        embed = config_embed.create_prompt_embed(i, test_prompts, test_answers)
         #  config = bot_functions.config_fields(i, embed, test_answers)
         if i == 0:
             assert embed.title == test_answers[0]
